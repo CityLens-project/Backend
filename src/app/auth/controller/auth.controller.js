@@ -14,7 +14,7 @@ export async function signup(req, res, next) {
     const data = validateBody(signupDTO, req.body);
 
     await authService.signup(data);
-    res.json({
+    return res.json({
       message: "User created successfully",
       success: true,
     });
@@ -29,7 +29,7 @@ export async function verifyAccount(req, res, next) {
     const { email, code } = data;
 
     await authService.verifyAccount(email, code);
-    res.json({
+    return res.json({
       message: "User verified successfully",
       success: true,
     });
@@ -44,10 +44,10 @@ export async function login(req, res, next) {
     const { email, password } = data;
 
     const { user, token } = await authService.login(email, password);
-    res.cookie("access_token", token, { maxAge: 3600 });
+    res.cookie("access_token", token, { maxAge: 3600, httpOnly: true });
 
-    res.json({
-      message: "User Logged in successfully",
+    return res.json({
+      message: "Logged in successfully",
       success: true,
       data: user,
     });
@@ -62,7 +62,7 @@ export async function sendOTP(req, res, next) {
 
     await authService.sendOTP(data.email);
 
-    res.json({
+    return res.json({
       message: "OTP sent successfully, check your email",
       success: true,
     });
@@ -76,7 +76,7 @@ export async function verifyOTP(req, res, next) {
     const data = validateBody(verifyOtpDTO, req.body);
     await authService.verifyOTP(data.email, data.code);
 
-    res.json({
+    return res.json({
       message: "OTP verified successfully",
       success: true,
     });
@@ -92,13 +92,21 @@ export async function resetPassword(req, res, next) {
     const { email, newPassword, code } = data;
     await authService.resetPassword(email, newPassword, code);
 
-    res.json({
+    return res.json({
       message: "Password reset successfully",
       success: true,
     });
   } catch (err) {
     next(err);
   }
+}
+
+export function logout(req, res, next) {
+  res.clearCookie("access_token");
+  return res.json({
+    message: "Logged out successfully",
+    success: true,
+  });
 }
 
 // export async function loginWithGoogle(req, res, next) {
@@ -108,7 +116,7 @@ export async function resetPassword(req, res, next) {
 //     const token = await authService.loginWithGoogle(req.body.credential);
 //     res.cookie("access_token", token, { httpOnly: true, maxAge: 3600 });
 
-//     res.json({
+//     return res.json({
 //       message: "User login successfully",
 //       success: true,
 //     });

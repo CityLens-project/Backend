@@ -63,6 +63,14 @@ Returns:
 
 Also sets an `access_token` cookie (one hour). The token is not returned in the JSON body.
 
+### Log out
+
+**POST** `/auth/logout`
+
+Send no request body. Include browser credentials so the existing cookie is sent.
+
+Returns: `{ "message": "Logged out successfully", "success": true }`. The response clears the `access_token` cookie.
+
 ### Send password-reset code
 
 **POST** `/auth/send-otp`
@@ -95,4 +103,4 @@ Send a unique `Idempotency-Key` header (for example, a UUID) with each reset att
 
 Errors return JSON with `success: false` and a `message`; validation errors use HTTP 400. Common statuses: 403 for an unverified account or invalid login, 404 for a missing user or expired code, and 409 for an existing account. Show the `message` to the user; do not show `stack` if present.
 
-Login requires a verified account. There is currently no logout, token-refresh, or social-login endpoint. The frontend origin must match the backend's configured CORS origin for cookie requests to work.
+Login requires a verified account. There is currently no token-refresh, or social-login endpoint. The frontend origin must match the backend's configured CORS origin for cookie requests to work.

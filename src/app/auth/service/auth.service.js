@@ -1,22 +1,30 @@
 import * as authRepository from "../repository/auth.repository.js";
 import * as userRepository from "../../user/repository/user.repository.js";
-import bcrypt from "bcrypt";
-import crypto from "node:crypto";
 import { cacheProvider } from "../../../lib/cache/init.js";
 import { sendMailProvider } from "../../../lib/email/init.js";
-import jwt from "jsonwebtoken";
+import {
+  userNotExist,
+  userAlreadyExist,
+  userAlreadyVerified,
+  userNotVerified,
+} from "../../user/errors.js";
+import { otpExpired, invalidCode, invalidEmailOrPassword } from "../errors.js";
+import { generateOtp } from "../utils/otp.js";
+import { hash, compareHash } from "../utils/hash.js";
+import { generateToken } from "../utils/token.js";
+// import { verifyGoogleToken } from "../../../lib/utils/google-auth.js";
 
 // Create sign up service
 export async function signup(userData) {
   const userExist = await authRepository.checkUserExistByEmail(userData.email);
-  if (userExist) throw new Error("User Already Exists.");
+  if (userExist) throw userAlreadyExist;
 
-  userData.password = await bcrypt.hash(userData.password, 10);
+  userData.password = await hash(userData.password);
 
   const createdUser = await authRepository.createUser(userData);
 
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const hashedOtp = await bcrypt.hash(otp, 10);
+  const otp = await generateOtp();
+  const hashedOtp = await hash(otp);
 
   const key = `otp:${userData.email}`;
   await cacheProvider.set(key, hashedOtp, 900);
@@ -34,15 +42,15 @@ export async function signup(userData) {
 // Create verify account service
 export async function verifyAccount(email, code) {
   const userExist = await authRepository.checkUserExistByEmail(email);
-  if (!userExist) throw new Error("User Not Exist.");
+  if (!userExist) throw userNotExist;
 
-  if (userExist.isVerified) throw new Error("User Already Verified.");
+  if (userExist.isVerified) throw userAlreadyVerified;
 
   const hashedOtp = await cacheProvider.get(`otp:${email}`);
-  if (!hashedOtp) throw new Error("OTP is expired.");
+  if (!hashedOtp) throw otpExpired;
 
-  const match = await bcrypt.compare(code, hashedOtp);
-  if (!match) throw new Error("Invalid OTP.");
+  const match = await compareHash(code, hashedOtp);
+  if (!match) throw invalidCode;
 
   await cacheProvider.del(`otp:${email}`);
   return await userRepository.updateUserByEmail(email, { isVerified: true });
@@ -51,29 +59,38 @@ export async function verifyAccount(email, code) {
 // Create login service
 export async function login(email, password) {
   const userExist = await authRepository.checkUserExistByEmail(email);
-  if (!userExist) throw new Error("User Not Exist.");
+  if (!userExist) throw userNotExist;
 
-  if (!userExist.isVerified) throw new Error("User Not Verified.");
+  if (!userExist.isVerified) throw userNotVerified;
 
-  const match = await bcrypt.compare(password, userExist.password);
+  const match = await compareHash(password, userExist.password);
+  if (!match) throw invalidEmailOrPassword;
 
-  if (!match) throw new Error("Invalid email or password.");
+  const token = generateToken({
+    id: userExist._id,
+    email: userExist.email,
+    name: userExist.name,
+    role: userExist.role,
+  });
 
-  const token = jwt.sign(
-    { id: userExist._id, email: userExist.email, name: userExist.name },
-    process.env.JWT_SECRET,
-    { expiresIn: 3600 },
-  );
-  return token;
+  return {
+    user: {
+      id: userExist._id,
+      email: userExist.email,
+      name: userExist.name,
+      role: userExist.role,
+    },
+    token,
+  };
 }
 
 // Create send otp function (for FORGET PASSWORD SERVICE)
 export async function sendOTP(email) {
   const userExist = await authRepository.checkUserExistByEmail(email);
-  if (!userExist) throw new Error("User Not Exist.");
+  if (!userExist) throw userNotExist;
 
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const hashedOtp = await bcrypt.hash(otp, 10);
+  const otp = await generateOtp();
+  const hashedOtp = await hash(otp);
 
   await cacheProvider.set(`otp:${email}`, hashedOtp, 900);
 
@@ -88,10 +105,10 @@ export async function sendOTP(email) {
 // Verify otp code function (for FORGET PASSWORD SERVICE)
 export async function verifyOTP(email, code) {
   const hashedOtp = await cacheProvider.get(`otp:${email}`);
-  if (!hashedOtp) throw new Error("OTP is expired.");
+  if (!hashedOtp) throw otpExpired;
 
-  const match = await bcrypt.compare(code, hashedOtp);
-  if (!match) throw new Error("Invalid OTP.");
+  const match = await compareHash(code, hashedOtp);
+  if (!match) throw invalidCode;
 
   await cacheProvider.del(`otp:${email}`);
 
@@ -99,7 +116,40 @@ export async function verifyOTP(email, code) {
 }
 
 // Create reset password function (for FORGET PASSWORD SERVICE)
-export async function resetPassword(email, newPassword) {
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+export async function resetPassword(email, newPassword, code) {
+  const hashedOtp = await cacheProvider.get(`otp:${email}`);
+  if (!hashedOtp) throw otpExpired;
+
+  const match = await compareHash(code, hashedOtp);
+  if (!match) throw invalidCode;
+
+  await cacheProvider.del(`otp:${email}`);
+
+  const hashedPassword = await hash(newPassword);
   await userRepository.updateUserByEmail(email, { password: hashedPassword });
 }
+
+// export async function loginWithGoogle(idToken) {
+//   const payload = await verifyGoogleToken(idToken);
+
+//   const user = await authRepository.checkUserExistByEmail(payload.email);
+//   if (user) {
+//     return await generateToken({
+//       id: payload._id,
+//       email: payload.email,
+//       name: payload.name,
+//     });
+//   }
+//   const createdUser = await authRepository.createUser({
+//     name: payload.name,
+//     email: payload.email,
+//     provider: "google",
+//     isVerified: true,
+//   });
+
+//   return await generateToken({
+//     id: createdUser._id,
+//     email: createdUser.email,
+//     name: createdUser.name,
+//   });
+// }

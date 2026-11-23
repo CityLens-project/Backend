@@ -1,8 +1,19 @@
 import * as authService from "../service/auth.service.js";
+import { validateBody } from "../../../lib/validation/validation.js";
+import {
+  signupDTO,
+  verifyAccountDTO,
+  loginDTO,
+  sendOtpDTO,
+  resetPasswordDTO,
+  verifyOtpDTO,
+} from "../dto/auth.dto.js";
 
 export async function signup(req, res, next) {
   try {
-    await authService.signup(req.body);
+    const data = validateBody(signupDTO, req.body);
+
+    await authService.signup(data);
     res.json({
       message: "User created successfully",
       success: true,
@@ -14,7 +25,9 @@ export async function signup(req, res, next) {
 
 export async function verifyAccount(req, res, next) {
   try {
-    const { email, code } = req.body;
+    const data = validateBody(verifyAccountDTO, req.body);
+    const { email, code } = data;
+
     await authService.verifyAccount(email, code);
     res.json({
       message: "User verified successfully",
@@ -27,13 +40,16 @@ export async function verifyAccount(req, res, next) {
 
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
-    const token = await authService.login(email, password);
-    res.cookie("access-token", token, { maxAge: 3600 });
+    const data = validateBody(loginDTO, req.body);
+    const { email, password } = data;
+
+    const { user, token } = await authService.login(email, password);
+    res.cookie("access_token", token, { maxAge: 3600 });
 
     res.json({
       message: "User Logged in successfully",
       success: true,
+      data: user,
     });
   } catch (err) {
     next(err);
@@ -42,8 +58,9 @@ export async function login(req, res, next) {
 
 export async function sendOTP(req, res, next) {
   try {
-    const email = req.body.email;
-    await authService.sendOTP(email);
+    const data = validateBody(sendOtpDTO, req.body);
+
+    await authService.sendOTP(data.email);
 
     res.json({
       message: "OTP sent successfully, check your email",
@@ -56,8 +73,8 @@ export async function sendOTP(req, res, next) {
 
 export async function verifyOTP(req, res, next) {
   try {
-    const { email, code } = req.body;
-    await authService.verifyOTP(email, code);
+    const data = validateBody(verifyOtpDTO, req.body);
+    await authService.verifyOTP(data.email, data.code);
 
     res.json({
       message: "OTP verified successfully",
@@ -70,8 +87,10 @@ export async function verifyOTP(req, res, next) {
 
 export async function resetPassword(req, res, next) {
   try {
-    const { email, newPassword } = req.body;
-    await authService.resetPassword(email, newPassword);
+    const data = validateBody(resetPasswordDTO, req.body);
+
+    const { email, newPassword, code } = data;
+    await authService.resetPassword(email, newPassword, code);
 
     res.json({
       message: "Password reset successfully",
@@ -81,3 +100,19 @@ export async function resetPassword(req, res, next) {
     next(err);
   }
 }
+
+// export async function loginWithGoogle(req, res, next) {
+//   try {
+//     // const data = validateBody(loginWithGoogleDTO, req.body);
+
+//     const token = await authService.loginWithGoogle(req.body.credential);
+//     res.cookie("access_token", token, { httpOnly: true, maxAge: 3600 });
+
+//     res.json({
+//       message: "User login successfully",
+//       success: true,
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// }

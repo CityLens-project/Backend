@@ -30,11 +30,11 @@ export async function signup(userData) {
   await cacheProvider.set(key, hashedOtp, 900);
 
   // send email
-  await sendMailProvider.sendEmail(
-    userData.email,
-    "Verification Code",
-    `<p>Your verification code is <b>${otp}</b></p>`,
-  );
+  // await sendMailProvider.sendEmail(
+  //   userData.email,
+  //   "Verification Code",
+  //   `<p>Your verification code is <b>${otp}</b></p>`,
+  // );
 
   return createdUser;
 }

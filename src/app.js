@@ -1,5 +1,5 @@
 import express from "express";
-import "./lib/db/mongoose.js";
+import { connectDB } from "./lib/db/mongoose.js";
 import { authRouter } from "./app/auth/auth.route.js";
 import cors from "cors";
 import { env } from "./lib/config/env.js";
@@ -7,7 +7,8 @@ import { globalErrorHandler } from "./lib/error/error.handler.js";
 import cookieParser from "cookie-parser";
 import { correlationId } from "./lib/correlation/correlationId.js";
 
-export function createApp() {
+export async function createApp() {
+  await connectDB();
   const app = express();
 
   app.use(

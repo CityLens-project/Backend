@@ -1,10 +1,8 @@
 import { RedisCacheProvider } from "../../pkg/cache/redis.js";
-import { config } from "dotenv";
-
-config();
+import { env } from "../config/env.js";
 
 export const cacheProvider = new RedisCacheProvider({
-  port: process.env.REDIS_PORT,
-  host: process.env.REDIS_HOST,
-  password: process.env.REDIS_PASSWORD || "",
+  port: env.redis.port,
+  host: env.redis.host,
+  password: env.redis.password || "",
 });

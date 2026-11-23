@@ -12,6 +12,13 @@ export class RedisCacheProvider {
       maxLoadingRetryTime: 3,
     });
 
+    // this.client = new Redis(config.url, {
+    //   maxRetriesPerRequest: 3,
+    //   retryStrategy(times) {
+    //     return Math.min(times * 500, 3000);
+    //   },
+    // });
+
     this.client
       .connect()
       .catch((err) => console.log("fail to connect to redis", err.message));

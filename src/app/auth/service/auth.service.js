@@ -16,25 +16,32 @@ import { generateToken } from "../utils/token.js";
 
 // Create sign up service
 export async function signup(userData) {
+  console.log("check user exist");
   const userExist = await authRepository.checkUserExistByEmail(userData.email);
   if (userExist) throw userAlreadyExist;
 
+  console.log("hash password");
   userData.password = await hash(userData.password);
 
+  console.log("create user");
   const createdUser = await authRepository.createUser(userData);
 
+  console.log("generate otp");
   const otp = await generateOtp();
+  console.log("hash otp");
   const hashedOtp = await hash(otp);
 
+  console.log("caching hash otp");
   const key = `otp:${userData.email}`;
   await cacheProvider.set(key, hashedOtp, 900);
 
   // send email
-  // await sendMailProvider.sendEmail(
-  //   userData.email,
-  //   "Verification Code",
-  //   `<p>Your verification code is <b>${otp}</b></p>`,
-  // );
+  console.log("send mail");
+  await sendMailProvider.sendEmail(
+    userData.email,
+    "Verification Code",
+    `<p>Your verification code is <b>${otp}</b></p>`,
+  );
 
   return createdUser;
 }

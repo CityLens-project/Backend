@@ -11,6 +11,13 @@ export async function createApp() {
   await connectDB();
   const app = express();
 
+  app.get("/health", (req, res) => {
+    return res.status(200).json({
+      status: "OK",
+      message: "Server is responding",
+    });
+  });
+
   app.use(
     cors({
       origin: env.cors.origin,

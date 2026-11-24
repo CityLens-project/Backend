@@ -5,22 +5,27 @@ For browser requests, use `credentials: "include"` so the login cookie is stored
 
 ## Endpoints
 
+**PROJECT_URL** `https://citylens.up.railway.app/`
+
 ### Sign up
 
-**POST** `/auth/signup`
+**POST** `/api/auth/signup`
 
 Send:
 
 ```json
 {
-  "name": "Alex Example",
+  "firstName": "Alex",
+  "lastName": "Example",
   "email": "alex@example.com",
   "password": "password123"
 }
 ```
 
-`name`: 2-20 characters (use at least 3);
-`email`: valid email; `password`: 8-20 characters.
+`firstName`: 3-30 characters (use at least 3);
+`lastName`: 3-30 characters (use at least 3);
+`email`: valid email;
+`password`: 8-20 characters.
 
 Optional:
 `provider` (`local`, `google`, or `facebook`; defaults to `local`),
@@ -32,7 +37,7 @@ verify the account before logging in.
 
 ### Verify account
 
-**PATCH** `/auth/verify-account`
+**PATCH** `/api/auth/verify-account`
 
 Send: `{ "email": "alex@example.com", "code": "123456" }`
 
@@ -42,7 +47,7 @@ Returns: `{ "message": "User verified successfully", "success": true }`.
 
 ### Log in
 
-**POST** `/auth/login`
+**POST** `/api/auth/login`
 
 Send: `{ "email": "alex@example.com", "password": "password123" }`
 
@@ -65,7 +70,7 @@ Also sets an `access_token` cookie (one hour). The token is not returned in the 
 
 ### Log out
 
-**POST** `/auth/logout`
+**POST** `/api/auth/logout`
 
 Send no request body. Include browser credentials so the existing cookie is sent.
 
@@ -73,7 +78,7 @@ Returns: `{ "message": "Logged out successfully", "success": true }`. The respon
 
 ### Send password-reset code
 
-**POST** `/auth/send-otp`
+**POST** `/api/auth/send-otp`
 
 Send: `{ "email": "alex@example.com" }`
 
@@ -81,7 +86,7 @@ Returns: `{ "message": "OTP sent successfully, check your email", "success": tru
 
 ### Verify one-time code
 
-**POST** `/auth/verify-otp`
+**POST** `/api/auth/verify-otp`
 
 Send: `{ "email": "alex@example.com", "code": "123456" }`
 
@@ -89,7 +94,7 @@ Returns: `{ "message": "OTP verified successfully", "success": true }`. This con
 
 ### Reset password
 
-**PATCH** `/auth/reset-password`
+**PATCH** `/api/auth/reset-password`
 
 Send: `{ "email": "alex@example.com", "code": "123456", "newPassword": "newpassword123" }`
 

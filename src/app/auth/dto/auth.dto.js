@@ -2,8 +2,9 @@ import z, { email } from "zod";
 
 export const signupDTO = z.object({
   email: z.email().toLowerCase().trim(),
-  name: z.string().min(2).max(20).trim(),
-  password: z.string().min(8).max(20).trim(),
+  firstName: z.string().min(3).max(30).trim(),
+  lastName: z.string().min(3).max(30).trim(),
+  password: z.string().min(8).max(30).trim(),
   provider: z.enum(["local", "google", "facebook"]).default("local"),
   dob: z.date().optional(),
   gender: z.enum(["male", "female"]).optional(),

@@ -2,11 +2,18 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
-    name: {
+    firstName: {
       type: String,
       required: true,
       minLength: 3,
-      maxLength: 50,
+      maxLength: 30,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      minLength: 3,
+      maxLength: 30,
       trim: true,
     },
 

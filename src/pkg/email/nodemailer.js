@@ -6,7 +6,11 @@ export class NodeMailerProvider {
   constructor(config) {
     this.transporter = nodemailer.createTransport({
       host: config.host,
-      port: config.port,
+      port: Number(config.port),
+      secure: Number(config.port) === 465,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 30_000,
       auth: {
         user: config.email,
         pass: config.password,
@@ -26,6 +30,7 @@ export class NodeMailerProvider {
       });
     } catch (err) {
       console.error("Error while sending mail:", err);
+      throw err;
     }
   }
 }

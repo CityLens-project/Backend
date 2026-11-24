@@ -1,11 +1,9 @@
 import { NodeMailerProvider } from "../../pkg/email/nodemailer.js";
-import { config } from "dotenv";
-
-config();
+import { env } from "../config/env.js";
 
 export const sendMailProvider = new NodeMailerProvider({
-  email: process.env.NODEMAILER_MAIL,
-  password: process.env.NODEMAILER_PASSWORD,
-  host: process.env.NODEMAILER_HOST,
-  port: process.env.NODEMAILER_PORT,
+  email: env.nodemailer.email,
+  password: env.nodemailer.password,
+  host: env.nodemailer.host,
+  port: env.nodemailer.port,
 });

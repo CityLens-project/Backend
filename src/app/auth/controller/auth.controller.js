@@ -15,7 +15,7 @@ export async function signup(req, res, next) {
 
     await authService.signup(data);
     return res.json({
-      message: "User created successfully",
+      message: "Verification email sent. Check your email to complete signup.",
       success: true,
     });
   } catch (err) {

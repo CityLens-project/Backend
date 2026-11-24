@@ -18,13 +18,16 @@ import { generateToken } from "../utils/token.js";
 export async function signup(userData) {
   console.log("check user exist");
   const userExist = await authRepository.checkUserExistByEmail(userData.email);
-  if (userExist) throw userAlreadyExist;
+  if (userExist?.isVerified) throw userAlreadyExist;
 
-  console.log("hash password");
-  userData.password = await hash(userData.password);
+  let user = userExist;
+  if (!user) {
+    console.log("hash password");
+    userData.password = await hash(userData.password);
 
-  console.log("create user");
-  const createdUser = await authRepository.createUser(userData);
+    console.log("create user");
+    user = await authRepository.createUser(userData);
+  }
 
   console.log("generate otp");
   const otp = await generateOtp();
@@ -43,7 +46,8 @@ export async function signup(userData) {
     `<p>Your verification code is <b>${otp}</b></p>`,
   );
 
-  return createdUser;
+  console.log("email was sent");
+  return user;
 }
 
 // Create verify account service

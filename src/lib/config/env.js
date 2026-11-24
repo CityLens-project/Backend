@@ -22,6 +22,8 @@ const schema = z.object({
   NODEMAILER_MAIL: z.string(),
   NODEMAILER_PASSWORD: z.string(),
 
+  RESEND_API_KEY: z.string(),
+
   JWT_SECRET: z.string(),
 
   GOOGLE_AUTH_CLIENT_ID: z.string(),
@@ -59,6 +61,10 @@ export const env = {
     host: parsed.NODEMAILER_HOST,
     email: parsed.NODEMAILER_MAIL,
     password: parsed.NODEMAILER_PASSWORD,
+  },
+
+  resend: {
+    apiKey: parsed.RESEND_API_KEY,
   },
 
   jwt: {
